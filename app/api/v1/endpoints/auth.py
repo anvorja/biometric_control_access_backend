@@ -5,7 +5,6 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
 
-from app import schemas
 from app.core.config import get_settings
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.api import deps
@@ -88,6 +87,19 @@ def login(
     }
 
 
+@router.post("/logout")
+async def logout(current_user: User = Depends(deps.get_current_user)):
+    """
+    Endpoint para registrar el logout del usuario
+    """
+    print("------- Logout Endpoint Hit -------")
+    print(f"User: {current_user.email}")
+    print(f"ID: {current_user.id}")
+    print(f"Full name: {current_user.full_name}")
+    print("----------------------------------")
+    return {"message": f"Logout exitoso para usuario {current_user.email}"}
+
+
 @router.get("/me", response_model=user_schemas.User)
 def read_current_user(
         current_user: User = Depends(deps.get_current_user)
@@ -168,8 +180,8 @@ def partial_update_user(
 
 @router.get("/users", response_model=List[user_schemas.User])  # Cambiado aquí
 def get_users(
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_admin)
+        db: Session = Depends(deps.get_db),
+        current_user: User = Depends(deps.get_current_admin)
 ):
     """
     Obtener todos los usuarios (solo admin)
