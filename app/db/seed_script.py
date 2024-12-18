@@ -2,11 +2,9 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.models.base_class import Base  # Cambiamos la importación
 from app.models.user import User
-from app.models.access_log import AccessLog
 from app.core.security import get_password_hash
 
 def seed_database():

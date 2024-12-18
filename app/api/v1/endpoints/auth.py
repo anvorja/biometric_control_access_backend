@@ -63,14 +63,27 @@ def login(
 ) -> Any:
     """
     Login OAuth2 compatible con obtención de token JWT.
+    Solo para administradores.
     """
     user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+
+    # Primero verificamos si es superuser
+    if not user or not user.is_superuser:
+        print("Solo ingreso permitido a Superusuarios")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Correo o contraseña incorrectos",
+            detail="Acceso permitido solo para administradores",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Luego verificamos la contraseña
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Contraseña incorrecta",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
