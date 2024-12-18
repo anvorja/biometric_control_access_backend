@@ -202,3 +202,34 @@ def export_access_logs_pdf(
             media_type='application/pdf',
             filename=f'access_logs_{datetime.now().strftime("%Y%m%d")}.pdf'
         )
+
+@router.get("/history/filtered", response_model=List[access_schemas.AccessLog])
+def get_filtered_access_history(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_admin),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    user_id: Optional[int] = Query(None),
+    access_type: Optional[str] = Query(None),
+    device_id: Optional[str] = Query(None),
+    status: Optional[str] = Query(None)
+):
+    """
+    Obtener historial de accesos con filtros
+    """
+    query = db.query(AccessLog).join(User)
+
+    if start_date:
+        query = query.filter(func.date(AccessLog.timestamp) >= start_date)
+    if end_date:
+        query = query.filter(func.date(AccessLog.timestamp) <= end_date)
+    if user_id:
+        query = query.filter(AccessLog.user_id == user_id)
+    if access_type:
+        query = query.filter(AccessLog.access_type == access_type)
+    if device_id:
+        query = query.filter(AccessLog.device_id == device_id)
+    if status:
+        query = query.filter(AccessLog.status == status)
+
+    return query.order_by(AccessLog.timestamp.desc()).all()
