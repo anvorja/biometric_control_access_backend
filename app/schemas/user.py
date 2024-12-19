@@ -29,6 +29,7 @@ class UserUpdate(BaseModel):
 class User(UserBase):
     id: int
     is_superuser: bool
+    fingerprint_template: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

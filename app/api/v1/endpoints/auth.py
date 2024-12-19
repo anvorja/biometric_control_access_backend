@@ -191,7 +191,7 @@ def partial_update_user(
     return current_user
 
 
-@router.get("/users", response_model=List[user_schemas.User])  # Cambiado aquí
+@router.get("/users", response_model=List[user_schemas.User])
 def get_users(
         db: Session = Depends(deps.get_db),
         current_user: User = Depends(deps.get_current_admin)
@@ -200,4 +200,50 @@ def get_users(
     Obtener todos los usuarios (solo admin)
     """
     users = db.query(User).all()
+    # Verifica que los usuarios tengan el campo fingerprint_template
+    print("Users with fingerprints:", [
+        (u.id, bool(u.fingerprint_template)) for u in users
+    ])
+
     return users
+
+@router.get("/users/{user_id}", response_model=user_schemas.User)
+def get_user(
+    user_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_admin)
+) -> Any:
+    """
+    Obtener un usuario por ID
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuario no encontrado"
+        )
+    return user
+
+
+@router.put("/users/{user_id}", response_model=user_schemas.User)
+def update_user(
+        user_id: int,
+        user_in: user_schemas.UserUpdate,
+        db: Session = Depends(deps.get_db),
+        current_user: User = Depends(deps.get_current_admin)
+) -> Any:
+    """Actualizar un usuario por ID (solo admin)"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    for field, value in user_in.model_dump(exclude_unset=True).items():
+        if field == "password":
+            user.hashed_password = get_password_hash(value)
+        else:
+            setattr(user, field, value)
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
