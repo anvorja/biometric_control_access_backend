@@ -41,6 +41,36 @@ async def register_fingerprint(
         raise HTTPException(status_code=500, detail=f"Error en el registro de huella: {str(e)}")
 
 
+# @router.post("/verify")
+# async def verify_fingerprint(
+#         db: Session = Depends(deps.get_db)
+# ):
+#     """Verificar huella y registrar acceso"""
+#     try:
+#         template = await fingerprint_service.capture_current_fingerprint()
+#         result = await fingerprint_service.verify_fingerprint(db, template)
+#
+#         if result.get("is_valid"):
+#             # Registrar acceso exitoso
+#             access_log = AccessLog(
+#                 user_id=result["user_id"],
+#                 access_type=result["access_type"],
+#                 status="success",
+#                 timestamp=datetime.now()
+#             )
+#             db.add(access_log)
+#             db.commit()
+#
+#             return {
+#                 "status": "success",
+#                 "user_id": result["user_id"],
+#                 "access_type": result["access_type"]
+#             }
+#
+#         raise HTTPException(status_code=401, detail="Huella no reconocida")
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+
 @router.post("/verify")
 async def verify_fingerprint(
         db: Session = Depends(deps.get_db)
@@ -51,7 +81,7 @@ async def verify_fingerprint(
         result = await fingerprint_service.verify_fingerprint(db, template)
 
         if result.get("is_valid"):
-            # Registrar acceso
+            # Registrar acceso exitoso
             access_log = AccessLog(
                 user_id=result["user_id"],
                 access_type=result["access_type"],
@@ -66,11 +96,26 @@ async def verify_fingerprint(
                 "user_id": result["user_id"],
                 "access_type": result["access_type"]
             }
+        else:
+            # Registrar intento fallido si hay un usuario_id
+            if "user_id" in result:
+                access_log = AccessLog(
+                    user_id=result["user_id"],
+                    access_type="entry",
+                    status="denied",
+                    reason="Usuario inactivo",
+                    timestamp=datetime.now()
+                )
+                db.add(access_log)
+                db.commit()
 
-        raise HTTPException(status_code=401, detail="Huella no reconocida")
+            raise HTTPException(
+                status_code=401,
+                detail=result.get("message", "Huella no reconocida")
+            )
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
 
 @router.post("/verify-false/{user_id}")
 async def verify_fingerprint_false(

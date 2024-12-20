@@ -1,6 +1,6 @@
 from typing import List, Optional, Any
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from datetime import datetime, date
 from fastapi.responses import FileResponse
@@ -142,25 +142,58 @@ def get_device_stats(
     return query.group_by(AccessLog.device_id).all()
 
 
-# Endpoint de exportación a PDF
-@router.get("/admin/export-pdf")
-def export_access_logs_pdf(
+@router.get("/admin/check-records")
+def check_access_logs_exist(
         *,
         db: Session = Depends(deps.get_db),
         current_user: User = Depends(deps.get_current_admin),
         start_date: Optional[date] = Query(None),
         end_date: Optional[date] = Query(None),
-        user_id: Optional[int] = Query(None)
-) -> Any:
-    """Exportar registros de acceso a PDF"""
-    # Obtener datos
-    query = db.query(AccessLog).join(User)
+        employee_id: Optional[str] = Query(None),
+        full_name: Optional[str] = Query(None)
+) -> dict:
+    """Verificar si existen registros de acceso con los filtros especificados"""
+    query = db.query(func.count(AccessLog.id)).join(User)
+
     if start_date:
         query = query.filter(func.date(AccessLog.timestamp) >= start_date)
     if end_date:
         query = query.filter(func.date(AccessLog.timestamp) <= end_date)
-    if user_id:
-        query = query.filter(AccessLog.user_id == user_id)
+    if employee_id:
+        query = query.filter(User.employee_id == employee_id)
+    if full_name:
+        query = query.filter(User.full_name.ilike(f"%{full_name}%"))
+
+    count = query.scalar()
+
+    return {
+        "hasRecords": count > 0,
+        "count": count
+    }
+
+
+# Endpoint de exportación a PDF
+@router.get("/admin/export-pdf")
+def export_access_logs_pdf(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_admin),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    employee_id: Optional[str] = Query(None),  # Cambiado de user_id
+    full_name: Optional[str] = Query(None)     # Nuevo
+) -> Any:
+    """Exportar registros de acceso a PDF"""
+    query = db.query(AccessLog).join(User)
+
+    if start_date:
+        query = query.filter(func.date(AccessLog.timestamp) >= start_date)
+    if end_date:
+        query = query.filter(func.date(AccessLog.timestamp) <= end_date)
+    if employee_id:
+        query = query.filter(User.employee_id == employee_id)
+    if full_name:
+        query = query.filter(User.full_name.ilike(f"%{full_name}%"))
 
     logs = query.order_by(AccessLog.timestamp.desc()).all()
 
@@ -203,13 +236,15 @@ def export_access_logs_pdf(
             filename=f'access_logs_{datetime.now().strftime("%Y%m%d")}.pdf'
         )
 
-@router.get("/history/filtered", response_model=List[access_schemas.AccessLog])
+@router.get("/history/filtered", response_model=List[access_schemas.AccessLogWithUser])  # Cambiado a AccessLogWithUser
 def get_filtered_access_history(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_admin),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
-    user_id: Optional[int] = Query(None),
+    employee_id: Optional[int] = Query(None),
+    email: Optional[str] = Query(None),
+    full_name: Optional[str] = Query(None),
     access_type: Optional[str] = Query(None),
     device_id: Optional[str] = Query(None),
     status: Optional[str] = Query(None)
@@ -217,14 +252,19 @@ def get_filtered_access_history(
     """
     Obtener historial de accesos con filtros
     """
-    query = db.query(AccessLog).join(User)
+    # Utilizamos joinedload para cargar la relación de usuario eficientemente
+    query = db.query(AccessLog).join(AccessLog.user)
 
     if start_date:
         query = query.filter(func.date(AccessLog.timestamp) >= start_date)
     if end_date:
         query = query.filter(func.date(AccessLog.timestamp) <= end_date)
-    if user_id:
-        query = query.filter(AccessLog.user_id == user_id)
+    if employee_id:
+        query = query.filter(User.employee_id == str(employee_id))
+    if email:
+        query = query.filter(User.email.ilike(f"%{email}%"))
+    if full_name:
+        query = query.filter(User.full_name.ilike(f"%{full_name}%"))
     if access_type:
         query = query.filter(AccessLog.access_type == access_type)
     if device_id:

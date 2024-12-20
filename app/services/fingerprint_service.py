@@ -27,10 +27,18 @@ class FingerprintService:
             raise ValueError("Formato de huella inválido")
 
         users = db.query(User).filter(User.fingerprint_template.isnot(None)).all()
+
         for user in users:
             # Asegúrate de que user.fingerprint_template se resuelva en una cadena
             stored_template = decrypt_fingerprint(str(user.fingerprint_template))
             if verify_templates_match(template, stored_template):
+                # Verificar si el usuario está activo
+                if not user.is_active:
+                    return {
+                        "is_valid": False,
+                        "message": "Usuario inactivo"
+                    }
+
                 return {
                     "is_valid": True,
                     "user_id": user.id,

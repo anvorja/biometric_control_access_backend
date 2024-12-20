@@ -1,3 +1,4 @@
+# schemas/access_log.py
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
@@ -6,6 +7,7 @@ from datetime import datetime
 class UserBase(BaseModel):
     email: str
     full_name: str
+    employee_id: Optional[int] = None
 
 
 class AccessLogBase(BaseModel):
