@@ -201,9 +201,9 @@ def get_users(
     """
     users = db.query(User).all()
     # Verifica que los usuarios tengan el campo fingerprint_template
-    print("Users with fingerprints:", [
-        (u.id, bool(u.fingerprint_template)) for u in users
-    ])
+    # print("Users with fingerprints:", [
+    #     (u.id, bool(u.fingerprint_template)) for u in users
+    # ])
 
     return users
 
