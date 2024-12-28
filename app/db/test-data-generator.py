@@ -23,21 +23,28 @@ def generate_test_data(db: Session):
             "full_name": "Usuario Inactivo",
             "employee_id": "2024002",
             "is_active": False,
-            "fingerprint_template": encrypt_fingerprint("template_inactivo_1")
+            "fingerprint_template": encrypt_fingerprint("template_inactivo_2")
         },
         {
             "email": "user3@test.com",
             "full_name": "Juan Pérez",
             "employee_id": "2024003",
             "is_active": True,
-            "fingerprint_template": encrypt_fingerprint("template_activo_2")
+            "fingerprint_template": encrypt_fingerprint("template_activo_3")
         },
         {
             "email": "user4@test.com",
             "full_name": "María García",
             "employee_id": "2024004",
             "is_active": True,
-            "fingerprint_template": encrypt_fingerprint("template_activo_3")
+            "fingerprint_template": encrypt_fingerprint("template_activo_4")
+        },
+        {
+            "email": "user5@test.com",
+            "full_name": "Deisy Catalina",
+            "employee_id": "110624004",
+            "is_active": True,
+            "fingerprint_template": encrypt_fingerprint("template_activo_5")
         }
     ]
 
@@ -99,7 +106,7 @@ def generate_test_data(db: Session):
 def clear_test_data(db: Session):
     """Limpia solo los datos de prueba de la base de datos"""
     # Eliminar solo los registros de acceso de usuarios de prueba
-    test_emails = ["user1@test.com", "user2@test.com", "user3@test.com", "user4@test.com"]
+    test_emails = ["user1@test.com", "user2@test.com", "user3@test.com", "user4@test.com", "user5@test.com"]
 
     # Primero obtener los IDs de usuarios de prueba
     test_users = db.query(User).filter(User.email.in_(test_emails)).all()
