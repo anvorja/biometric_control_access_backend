@@ -19,4 +19,5 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relación con AccessLog
-    access_logs = relationship("AccessLog", back_populates="user")
+    #access_logs = relationship("AccessLog", back_populates="user")
+    access_logs = relationship("AccessLog", back_populates="user", lazy="select")

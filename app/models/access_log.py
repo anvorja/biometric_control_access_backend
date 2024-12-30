@@ -15,4 +15,5 @@ class AccessLog(Base):
     device_id = Column(String)
 
     # Relación con User
-    user = relationship("User", back_populates="access_logs")
+    # user = relationship("User", back_populates="access_logs")
+    user = relationship("User", back_populates="access_logs", lazy="joined")

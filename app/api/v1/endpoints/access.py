@@ -12,7 +12,9 @@ from app.api import deps
 from app.models.user import User
 from app.models.access_log import AccessLog
 from app.schemas import access_log as access_schemas
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -236,40 +238,59 @@ def export_access_logs_pdf(
             filename=f'access_logs_{datetime.now().strftime("%Y%m%d")}.pdf'
         )
 
-@router.get("/history/filtered", response_model=List[access_schemas.AccessLogWithUser])  # Cambiado a AccessLogWithUser
+
+@router.get("/history/filtered", response_model=List[access_schemas.AccessLogWithUser])
 def get_filtered_access_history(
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_admin),
-    start_date: Optional[date] = Query(None),
-    end_date: Optional[date] = Query(None),
-    employee_id: Optional[int] = Query(None),
-    email: Optional[str] = Query(None),
-    full_name: Optional[str] = Query(None),
-    access_type: Optional[str] = Query(None),
-    device_id: Optional[str] = Query(None),
-    status: Optional[str] = Query(None)
+        db: Session = Depends(deps.get_db),
+        current_user: User = Depends(deps.get_current_admin),
+        start_date: Optional[date] = Query(None),
+        end_date: Optional[date] = Query(None),
+        employee_id: Optional[str] = Query(None),  # Cambiado a str
+        email: Optional[str] = Query(None),
+        full_name: Optional[str] = Query(None),
+        access_type: Optional[str] = Query(None),
+        device_id: Optional[str] = Query(None),
+        status: Optional[str] = Query(None)
 ):
     """
     Obtener historial de accesos con filtros
     """
-    # Utilizamos joinedload para cargar la relación de usuario eficientemente
-    query = db.query(AccessLog).join(AccessLog.user)
+    try:
+        logger.info(f"Iniciando búsqueda con filtros: {locals()}")
 
-    if start_date:
-        query = query.filter(func.date(AccessLog.timestamp) >= start_date)
-    if end_date:
-        query = query.filter(func.date(AccessLog.timestamp) <= end_date)
-    if employee_id:
-        query = query.filter(User.employee_id == str(employee_id))
-    if email:
-        query = query.filter(User.email.ilike(f"%{email}%"))
-    if full_name:
-        query = query.filter(User.full_name.ilike(f"%{full_name}%"))
-    if access_type:
-        query = query.filter(AccessLog.access_type == access_type)
-    if device_id:
-        query = query.filter(AccessLog.device_id == device_id)
-    if status:
-        query = query.filter(AccessLog.status == status)
+        # Construir la consulta base
+        query = db.query(AccessLog)
 
-    return query.order_by(AccessLog.timestamp.desc()).all()
+        # Aplicar los filtros
+        if start_date:
+            query = query.filter(func.date(AccessLog.timestamp) >= start_date)
+        if end_date:
+            query = query.filter(func.date(AccessLog.timestamp) <= end_date)
+        if employee_id:
+            query = query.join(User).filter(User.employee_id == employee_id)
+        if email:
+            query = query.join(User).filter(User.email.ilike(f"%{email}%"))
+        if full_name:
+            query = query.join(User).filter(User.full_name.ilike(f"%{full_name}%"))
+        if access_type:
+            query = query.filter(AccessLog.access_type == access_type)
+        if device_id:
+            query = query.filter(AccessLog.device_id == device_id)
+        if status:
+            query = query.filter(AccessLog.status == status)
+
+        # Asegurarnos de que la relación user está cargada
+        if not any([employee_id, email, full_name]):
+            query = query.join(User)
+
+        result = query.order_by(AccessLog.timestamp.desc()).all()
+        logger.info(f"Búsqueda completada. Encontrados {len(result)} registros")
+
+        return result
+    except Exception as e:
+        logger.error(f"Error en get_filtered_access_history: {str(e)}")
+        logger.exception("Traceback completo:")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {str(e)}"
+        )

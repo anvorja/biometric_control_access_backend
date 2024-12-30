@@ -1,18 +1,24 @@
 # schemas/access_log.py
 from typing import Optional
-from pydantic import BaseModel
 from datetime import datetime
+from pydantic import BaseModel, ConfigDict
+
 
 
 class UserBase(BaseModel):
     email: str
     full_name: str
-    employee_id: Optional[int] = None
+    #employee_id: Optional[int] = None
+    employee_id: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AccessLogBase(BaseModel):
     access_type: str  # "entry" o "exit"
     device_id: str = "default"  # Valor por defecto si no se especifica
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AccessLogCreate(AccessLogBase):
@@ -25,12 +31,10 @@ class AccessLog(AccessLogBase):
     status: str
     timestamp: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AccessLogWithUser(AccessLog):
     user: Optional[UserBase]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -15,7 +15,7 @@ def seed_database():
             "email": "cborja@discdc.com",
             "full_name": "andres",
             "employee_id": "1155",
-            "hashed_password": get_password_hash("admin123"),
+            "hashed_password": get_password_hash("#Admin123"),
             "is_active": True,
             "is_superuser": True
         }
@@ -26,7 +26,7 @@ def seed_database():
                 "email": "usuario1@discdc.com",
                 "full_name": "Usuario Uno",
                 "employee_id": "2001",
-                "hashed_password": get_password_hash("user123"),
+                "hashed_password": get_password_hash("#User123"),
                 "is_active": True,
                 "is_superuser": False
             },
@@ -34,7 +34,7 @@ def seed_database():
                 "email": "usuario2@discdc.com",
                 "full_name": "Usuario Dos",
                 "employee_id": "2002",
-                "hashed_password": get_password_hash("user123"),
+                "hashed_password": get_password_hash("#User123"),
                 "is_active": True,
                 "is_superuser": False
             },
@@ -42,7 +42,7 @@ def seed_database():
                 "email": "usuario3@discdc.com",
                 "full_name": "Usuario Tres",
                 "employee_id": "2003",
-                "hashed_password": get_password_hash("user123"),
+                "hashed_password": get_password_hash("#User123"),
                 "is_active": True,
                 "is_superuser": False
             },
@@ -50,7 +50,7 @@ def seed_database():
                 "email": "usuario4@discdc.com",
                 "full_name": "Usuario Cuatro",
                 "employee_id": "2004",
-                "hashed_password": get_password_hash("user123"),
+                "hashed_password": get_password_hash("#User123"),
                 "is_active": True,
                 "is_superuser": False
             },
@@ -58,7 +58,7 @@ def seed_database():
                 "email": "usuario5@discdc.com",
                 "full_name": "Usuario Cinco",
                 "employee_id": "2005",
-                "hashed_password": get_password_hash("user123"),
+                "hashed_password": get_password_hash("#User123"),
                 "is_active": True,
                 "is_superuser": False
             }
