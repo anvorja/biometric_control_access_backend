@@ -6,7 +6,7 @@ source .venv/bin/activate
 
 pip install -r requeriments.txt 
 
-.env en [drive](https://drive.google.com/file/d/1EQ9HP8g5HvRUAaJq07TpoEbxTANaCr9Z/view?usp=sharing)
+.env en [drive](https://drive.google.com/drive/folders/1p4tAIsf14WVmowL-IwcBU3StA_897baN?usp=drive_link)
 
 (copiar env.py de alembic por fuera )
 
