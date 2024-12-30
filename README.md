@@ -178,7 +178,7 @@ graph LR
 
 ## 📝 License
 
-[Insert your license information here]
+[...]
 
 ---
 For more information or support, please contact the development team at [cborja@discdc.com](mailto:cborja@discdc.com).
